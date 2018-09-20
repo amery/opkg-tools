@@ -106,9 +106,14 @@ while [ $# -gt 0 ]; do
 done
 
 MKUPDATE="$MYDIR/mkupdate.py"
-DEPLOY_IPK_DIR=$(ls -1t \
-	tmp*/deploy/ipk/*/Packages.gz \
-	2> /dev/null | sed -e 's|/[^/]\+/Packages.gz||' -e '1!d')
+
+# DEPLOY_IPK_DIR is the ipk/ directory where the newest Packages.gz is found
+DEPLOY_IPK_DIR=$(for dd in tmp*/deploy *tmp*/*/deploy *tmp*/*/*/deploy; do
+	[ -d "$dd" ] || continue
+	for pd in "$dd/ipk" "$dd"/*/ipk; do
+		ls -1 "$pd"/*/Packages.gz || true
+	done
+done 2> /dev/null | xargs -r ls -1t | sed -e 's|/[^/]\+/Packages.gz||' -e '1!d')
 
 cat <<EOT
 #    TARGET: ssh://$REMOTE${REMOTE_PORT:+:$REMOTE_PORT}
