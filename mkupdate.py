@@ -45,7 +45,7 @@ class Package(object):
 
                 for k in [ 'Architecture' ]:
                     if self[k] != other[k]:
-                        logging.warning("%s: %s defers (%s vs %s)",
+                        logging.warning("%s: %s differs (%s vs %s)",
                                 self.Name, k, self[k], other[k])
                         ill = True
 
@@ -60,7 +60,7 @@ class Package(object):
                     v0 = x
 
                     if v0 or v1:
-                        logging.warning("%s: %s defers (%r vs %r)",
+                        logging.warning("%s: %s differs (%r vs %r)",
                                 self.Name, k, v0, v1)
                         ill = True
 
