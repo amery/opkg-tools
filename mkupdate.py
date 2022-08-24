@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # vim: set ft=python et ts=4 sw=4:
 
 import errno
