@@ -108,7 +108,7 @@ done
 MKUPDATE="$MYDIR/mkupdate.py"
 
 # DEPLOY_IPK_DIR is the ipk/ directory where the newest Packages.gz is found
-DEPLOY_IPK_DIR=$(for dd in tmp*/deploy *tmp*/*/deploy *tmp*/*/*/deploy; do
+DEPLOY_IPK_DIR=$(for dd in $PWD ${PWD%/*} ipk/deploy tmp*/deploy *tmp*/*/deploy *tmp*/*/*/deploy; do
 	[ -d "$dd" ] || continue
 	for pd in "$dd/ipk" "$dd"/*/ipk; do
 		ls -1 "$pd"/*/Packages.gz || true
@@ -148,7 +148,10 @@ touch "$REMOTE_OPKG_STATUS"
 
 info "Generating update material"
 "$MKUPDATE" $MKUPDATE_OPTS "$DEPLOY_IPK_DIR" "$REMOTE_OPKG_STATUS"
-LOCAL_UPDATE_DIR=$(ls -1dt "$DEPLOY_IPK_DIR"/../images/update-from-*/ 2> /dev/null | head -n1)
+LOCAL_UPDATE_DIR=$(ls -1dt \
+	"$DEPLOY_IPK_DIR"/../images/update-from-*/ \
+	"$DEPLOY_IPK_DIR"/../update-from-*/ \
+	2> /dev/null | head -n1)
 
 if [ -d "$LOCAL_UPDATE_DIR" ]; then
 	T0=$(stat -c%Y "$LOCAL_UPDATE_DIR")

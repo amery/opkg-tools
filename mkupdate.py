@@ -193,6 +193,9 @@ def DiscoverManifest(ref):
             p = path_join(ipkdir, '..', 'images')
             if os.path.isdir(p):
                 basedir = p
+            else:
+                # ipk/..
+                basedir = path_join(ipkdir, '..')
 
     if m:
         m.basedir = basedir
@@ -234,7 +237,7 @@ class Manifest(object):
         self.statusfile  = statusFile
         self.versionfile = versionFile
         self.version = None
-        self.basedir = basedir
+        self.basedir = basedir or "."
         self.ipkdir  = ipkdir
 
     def loadAll(self):
@@ -428,7 +431,9 @@ def do_update(target, goals, *bases):
     for base in bases:
         packages = target.UpdateFrom(goals, base)
         version  = base.getVersion() if base else "any"
-        archs    = base.architectures if base else target.architectures
+        archs    = base.architectures if base else []
+        if len(archs) == 0:
+            archs = target.architectures
 
         if len(packages) > 0:
             packages.sort(key = lambda p: "%s/%s" % (p.Architecture, p.Name))
