@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # vim: set ft=python et ts=4 sw=4:
 
 import errno
@@ -110,7 +110,7 @@ def parseManifest(filename):
     ret, d = {}, {}
 
     if fnmatch.fnmatch(filename, '*.gz'):
-        f = gzip.GzipFile(filename, 'rt')
+        f = gzip.open(filename, 'rt')
     else:
         f = open(filename, 'rt')
 
@@ -207,7 +207,7 @@ def DiscoverManifest(ref):
 
 class PackageIterator:
     def __init__(self, d):
-        self.l = [ (k, p) for k, p in d.iteritems() ]
+        self.l = [ (k, p) for k, p in d.items() ]
         self.l.sort(key = lambda t: t[0])
         self.i, self.max = 0, len(self.l)
 
@@ -228,7 +228,7 @@ class Manifest(object):
     def __init__(self, statusFile=None, ipkdir=None, basedir=None, versionFile=None):
         if statusFile:
             self.status = parseManifest(statusFile)
-            self.architectures = sorted(list(set(p.Architecture for _, p in self.status.iteritems())))
+            self.architectures = sorted(list(set(p.Architecture for _, p in self.status.items())))
         else:
             self.status = {}
             self.architectures = None
@@ -263,7 +263,7 @@ class Manifest(object):
         if self.status:
             outdated = False
 
-            for k, p0 in self.status.iteritems():
+            for k, p0 in self.status.items():
                 p1 = self.packages.get(k, None)
                 if not p1:
                     logging.warning("%s: MISSING", k)
@@ -302,7 +302,7 @@ class Manifest(object):
         if name in packages:
             return packages[name]
 
-        for k, p in packages.iteritems():
+        for k, p in packages.items():
             if k.endswith("-static"):
                 pass
             elif p['Provides'] and name in p['Provides']:
@@ -444,7 +444,7 @@ def do_update(target, goals, *bases):
                 shutil.rmtree(outdir)
 
             for arch in archs:
-                os.makedirs(os.path.join(outdir, arch), 0755)
+                os.makedirs(os.path.join(outdir, arch), 0o755)
 
             def copy(f):
                 logging.info(" > %s", f)
@@ -469,7 +469,7 @@ if __name__ == '__main__':
     try:
         opts, args = getopt(sys.argv[1:], "x:")
     except getopt.GetoptError:
-        print 'mkupdate.py [-x <goal_package>] <target_manifest> <origin_manifest..>'
+        print('mkupdate.py [-x <goal_package>] <target_manifest> <origin_manifest..>')
         sys.exit(2)
 
     goals = []
