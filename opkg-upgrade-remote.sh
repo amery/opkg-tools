@@ -127,13 +127,37 @@ done
 
 MKUPDATE="$MYDIR/mkupdate.py"
 
+# Helper to safely list directories
+list_dir() {
+	ls -1d "$@" 2>/dev/null || true
+}
+
+# Emit candidate base directories for ipk discovery
+emit_deploy_candidates() {
+	# Current directory and parent
+	list_dir "$PWD" "${PWD%/*}"
+
+	# Relative paths from current directory
+	list_dir ipk/deploy
+	list_dir build*/deploy
+	list_dir build*/*/deploy
+	list_dir tmp*/deploy
+	list_dir *tmp*/*/deploy
+	list_dir *tmp*/*/*/deploy
+}
+
+# Find the newest ipk directory with valid Packages.gz
+find_deploy_ipk_dir() {
+	emit_deploy_candidates | while IFS= read -r dd; do
+		[ -d "$dd" ] || continue
+		for pd in "$dd/ipk" "$dd"/*/ipk; do
+			ls -1 "$pd"/*/Packages.gz 2>/dev/null || true
+		done
+	done | xargs -r ls -1t | sed -e 's|/[^/]\+/Packages.gz||' -e '1!d'
+}
+
 # DEPLOY_IPK_DIR is the ipk/ directory where the newest Packages.gz is found
-DEPLOY_IPK_DIR=$(for dd in $PWD ${PWD%/*} ipk/deploy tmp*/deploy *tmp*/*/deploy *tmp*/*/*/deploy; do
-	[ -d "$dd" ] || continue
-	for pd in "$dd/ipk" "$dd"/*/ipk; do
-		ls -1 "$pd"/*/Packages.gz || true
-	done
-done 2> /dev/null | xargs -r ls -1t | sed -e 's|/[^/]\+/Packages.gz||' -e '1!d')
+DEPLOY_IPK_DIR=$(find_deploy_ipk_dir)
 
 cat <<EOT
 #    TARGET: ssh://$REMOTE${REMOTE_PORT:+:$REMOTE_PORT}
