@@ -109,6 +109,13 @@ def parseManifest(filename):
     k, v = None, None
     ret, d = {}, {}
 
+    # Package states to skip (not fully installed)
+    skip_states = [
+        " not-installed",
+        " half-installed",
+        " half-configured",
+    ]
+
     if fnmatch.fnmatch(filename, '*.gz'):
         f = gzip.open(filename, 'rt')
     else:
@@ -129,8 +136,8 @@ def parseManifest(filename):
         elif line == '\n':
             if d:
                 p, d = Package(d), {}
-                if p.Status.endswith(" not-installed"):
-                    logging.info("%s: not-installed - SKIPPING", p.Name)
+                if any(p.Status.endswith(state) for state in skip_states):
+                    logging.info("%s: %s - SKIPPING", p.Name, p.Status.split()[-1])
                 else:
                     ret[p.Name] = p
         elif k:
@@ -148,8 +155,8 @@ def parseManifest(filename):
 
     if d:
         p = Package(d)
-        if p.Status.endswith(" not-installed"):
-            logging.info("%s: not-installed - SKIPPING", p.Name)
+        if any(p.Status.endswith(state) for state in skip_states):
+            logging.info("%s: %s - SKIPPING", p.Name, p.Status.split()[-1])
         else:
             ret[p.Name] = p
 

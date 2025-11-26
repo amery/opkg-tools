@@ -283,8 +283,8 @@ The script recursively processes:
 - **Recommends:** Optional dependencies (included if available)
 - **Provides:** Virtual package resolution
 
-**Limitation:** Does not detect when an upgraded package adds new
-dependencies (see Known Issues).
+New dependencies are automatically detected and included with full
+transitive dependency resolution.
 
 ## SSH Security Considerations
 
@@ -354,48 +354,7 @@ please build package-index again`
 
 ## Known Issues and Limitations
 
-### 1. New dependency detection
-
-**Issue:** When a package upgrade adds a new RDEPENDS, mkupdate.py
-does not include it in update material.
-
-**Scenario:**
-
-```text
-package-a v1.0 RDEPENDS=""
-package-a v1.1 RDEPENDS="new-library"
-```
-
-If `new-library` is already installed on the target, mkupdate.py:
-
-- Detects package-a needs upgrading ✓
-- Analyses v1.1 dependencies ✓
-- Sees new-library exists on target ✓
-- Assumes no transfer needed ✗ (incorrect)
-- Does not include new-library in update material ✗
-
-**Result:** opkg fails with unsatisfied dependency error.
-
-**Workaround:** Use RAUC bundles for major updates, or explicitly
-specify the new dependency with `-x`.
-
-### 2. Half-installed packages
-
-**Issue:** mkupdate.py only checks for `Status: ... not-installed`
-but ignores half-installed/half-configured packages.
-
-**Half-installed states:**
-
-- `install user half-installed`
-- `install user half-configured`
-
-These are treated as fully installed, which may cause upgrade
-issues.
-
-**Workaround:** Manually clean up half-installed packages before
-running upgrade.
-
-### 3. Timestamp race condition
+### 1. Timestamp race condition
 
 Between downloading remote status (used for comparison) and actual
 upgrade, remote packages could change if concurrent operations
@@ -406,7 +365,7 @@ occur.
 **Impact:** Minor (timestamp check may incorrectly skip or allow
 transfer)
 
-### 4. No rollback mechanism
+### 2. No rollback mechanism
 
 If upgrade fails partway through, system may be left with:
 
@@ -417,7 +376,7 @@ If upgrade fails partway through, system may be left with:
 **Recommendation:** For critical systems, use atomic update
 mechanisms (RAUC, SWUpdate) rather than opkg direct upgrades.
 
-### 5. Architecture-specific limitations
+### 3. Architecture-specific limitations
 
 The script assumes standard Yocto/OE directory structures:
 
@@ -558,9 +517,8 @@ ssh target stat /var/lib/opkg/status
 
 **Possible causes:**
 
-1. New RDEPENDS not detected (known issue)
-2. Package feed configuration issues on target
-3. Required package not built locally
+1. Package feed configuration issues on target
+2. Required package not built locally
 
 **Solution:**
 
