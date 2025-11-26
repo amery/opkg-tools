@@ -1,6 +1,35 @@
 #!/bin/sh
 
 set -eu
+
+die() {
+	echo "# FATAL: $*" >&2
+	exit 1
+}
+
+info() {
+	echo "# $*" >&2
+}
+
+# Parse -C option first (before extracting REMOTE)
+CHDIR=
+while [ $# -gt 0 ]; do
+	case "$1" in
+	-C)
+		CHDIR="$2"
+		shift 2
+		;;
+	*)
+		break
+		;;
+	esac
+done
+
+# Change directory if -C was provided
+if [ -n "$CHDIR" ]; then
+	cd "$CHDIR" || die "Failed to change directory to: $CHDIR"
+fi
+
 REMOTE="$1"
 REMOTE_PORT=
 shift
@@ -63,15 +92,6 @@ cleanup() {
 	if [ -n "$REMOTE_OPKG_STATUS" ]; then
 		rm -f "$REMOTE_OPKG_STATUS"
 	fi
-}
-
-die() {
-	echo "# FATAL: $*" >&2
-	exit 1
-}
-
-info() {
-	echo "# $*" >&2
 }
 
 MKUPDATE_OPTS=
