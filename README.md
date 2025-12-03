@@ -269,11 +269,20 @@ Two packages are considered equal when:
 - Same architecture
 - Compatible Provides/Depends/Recommends (version restrictions
   ignored)
+- **Not in broken state** (half-installed or half-configured
+  packages are never considered equal, even with matching versions)
 
 **Warnings issued for:**
 
 - Architecture mismatches (same name/version, different arch)
 - Dependency differences (same name/version, different deps)
+
+**Broken package handling:**
+
+Half-installed and half-configured packages are automatically
+detected and included in update material for repair, even when
+version numbers match. This enables recovery from interrupted
+installations or package architecture migrations.
 
 ### Dependency handling
 

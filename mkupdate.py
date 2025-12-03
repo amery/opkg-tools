@@ -40,6 +40,10 @@ class Package(object):
         ill = False
 
         if isinstance(other, Package) and self.Name == other.Name:
+            # Never consider packages needing repair as equal
+            if self.needsRepair():
+                return False
+
             if self.Version == other.Version:
                 ret = True
 
@@ -103,18 +107,23 @@ class Package(object):
         f = "%s_%s_%s.ipk" % (self.Name, v, self.Architecture)
         return os.path.join(self.Architecture, f)
 
+    def needsRepair(self):
+        """Check if package is in broken state requiring repair"""
+        if not self.Status:
+            return False
+        return "half-installed" in self.Status or "half-configured" in self.Status
+
+    def shouldSkip(self):
+        """Check if package should be skipped during manifest parsing"""
+        if not self.Status:
+            return False
+        return "not-installed" in self.Status
+
 def parseManifest(filename):
     logging.info("Parsing %s", filename)
 
     k, v = None, None
     ret, d = {}, {}
-
-    # Package states to skip (not fully installed)
-    skip_states = [
-        " not-installed",
-        " half-installed",
-        " half-configured",
-    ]
 
     if fnmatch.fnmatch(filename, '*.gz'):
         f = gzip.open(filename, 'rt')
@@ -136,7 +145,7 @@ def parseManifest(filename):
         elif line == '\n':
             if d:
                 p, d = Package(d), {}
-                if any(p.Status.endswith(state) for state in skip_states):
+                if p.shouldSkip():
                     logging.info("%s: %s - SKIPPING", p.Name, p.Status.split()[-1])
                 else:
                     ret[p.Name] = p
@@ -155,7 +164,7 @@ def parseManifest(filename):
 
     if d:
         p = Package(d)
-        if any(p.Status.endswith(state) for state in skip_states):
+        if p.shouldSkip():
             logging.info("%s: %s - SKIPPING", p.Name, p.Status.split()[-1])
         else:
             ret[p.Name] = p
